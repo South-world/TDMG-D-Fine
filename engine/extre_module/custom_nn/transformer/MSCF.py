@@ -17,33 +17,6 @@ from engine.deim.hybrid_encoder import TransformerEncoderBlock
 
 __all__ = ['MSCF']
 
-
-
-class GConv(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.) -> None:
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        hidden_features = int(2 * hidden_features / 3)
-        self.fc1 = nn.Conv2d(in_features, hidden_features * 2, 1)
-        self.dwconv = nn.Sequential(
-            nn.Conv2d(hidden_features, hidden_features, kernel_size=3, stride=1, padding=1, bias=True,
-                      groups=hidden_features),
-            act_layer()
-        )
-        self.fc2 = nn.Conv2d(hidden_features, out_features, 1)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x):
-        x_shortcut = x
-        x, v = self.fc1(x).chunk(2, dim=1)  # chunk函数用于将张量按指定维度分割成多个等大小或不等大小的块。当元素数量不能整除指定的块数时，最后一个块的大小会较小
-        x = self.dwconv(x) * v
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
-        return x_shortcut + x
-
-
 class GConv3(nn.Module):
     def __init__(self, in_features, out_features,hidden_features=None,
                  act_layer=nn.GELU, drop=0., n=1) -> None:
